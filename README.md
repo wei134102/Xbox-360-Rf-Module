@@ -89,6 +89,16 @@ pio run -e nano -t upload
 | `nano` | Arduino AVR | — |
 | `rp2040zero` | Arduino RP2040 | U8g2（SSD1306）；板载 RGB 由固件直接驱动（GP16） |
 
+## OLED 图标工具
+
+从图片生成 U8g2 位图头文件（支持手工改像素）：
+
+```bat
+tools\oled-icon-maker\run.bat
+```
+
+详见 [tools/oled-icon-maker/README.md](tools/oled-icon-maker/README.md)。
+
 ## 参考 / References
 
 - [appliedcarbon.org](https://www.appliedcarbon.org/xboxrf.html)

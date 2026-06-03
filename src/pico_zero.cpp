@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include <Wire.h>
+#include "xbox360_icon.h"
 
 // ========== 引脚定义 / Pin Definitions ==========
 #define RF_DATA_PIN 3
@@ -178,17 +179,27 @@ static bool pairButtonPressed() {
   return (digitalRead(RF_SYNC_PIN) == LOW) || (digitalRead(BUTTON_PIN) == LOW);
 }
 
+static void drawControllerIcon() {
+  u8g2.drawVLine(XBOX_ICON_X - 3, 6, 52);
+  u8g2.drawXBMP(XBOX_ICON_X, XBOX_ICON_Y, XBOX_ICON_W, XBOX_ICON_H, xbox360_icon);
+}
+
 void showStatus(const char* msg) {
   u8g2.clearBuffer();
+
+  u8g2.setClipWindow(0, 0, XBOX_ICON_X - 5, 63);
   u8g2.setFont(u8g2_font_ncenB08_tr);
   u8g2.drawStr(0, 12, "Xbox360 RF");
   u8g2.drawStr(0, 28, msg);
-  char buf[32];
+  char buf[24];
   snprintf(buf, sizeof(buf), "Paired: %d", paired_count);
   u8g2.drawStr(0, 44, buf);
   if (!rf_bus_ok) {
     u8g2.drawStr(0, 56, "RF bus ERR");
   }
+  u8g2.setMaxClipWindow();
+
+  drawControllerIcon();
   u8g2.sendBuffer();
 }
 

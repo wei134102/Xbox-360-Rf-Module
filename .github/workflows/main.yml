@@ -1,1 +1,104 @@
+# 手动编译 Xbox 360 RF 固件（PlatformIO）
+# GitHub → Actions → Build Firmware → Run workflow
+name: Build Firmware
 
+run-name: Firmware ${{ inputs.target }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 编译目标
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - rp2040zero
+          - nano
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firmware-${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio/.cache
+            ~/.platformio/packages
+            ~/.platformio/platforms
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+          restore-keys: |
+            pio-${{ runner.os }}-
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: pip install -U platformio
+
+      - name: Build RP2040-zero (pico_zero.cpp)
+        if: inputs.target == 'all' || inputs.target == 'rp2040zero'
+        run: pio run -e rp2040zero
+
+      - name: Upload RP2040-zero firmware
+        if: inputs.target == 'all' || inputs.target == 'rp2040zero'
+        uses: actions/upload-artifact@v4
+        with:
+          name: xbox360-rf-rp2040zero
+          path: |
+            .pio/build/rp2040zero/firmware.uf2
+            .pio/build/rp2040zero/firmware.bin
+            .pio/build/rp2040zero/firmware.elf
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Build Arduino Nano (main.cpp)
+        if: inputs.target == 'all' || inputs.target == 'nano'
+        run: pio run -e nano
+
+      - name: Upload Nano firmware
+        if: inputs.target == 'all' || inputs.target == 'nano'
+        uses: actions/upload-artifact@v4
+        with:
+          name: xbox360-rf-nano
+          path: |
+            .pio/build/nano/firmware.hex
+            .pio/build/nano/firmware.elf
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Build summary
+        if: always()
+        shell: bash
+        run: |
+          echo "## Firmware build summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Target:** \`${{ inputs.target }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Target | Main file | Flash method |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|-----------|--------------|" >> "$GITHUB_STEP_SUMMARY"
+          T="${{ inputs.target }}"
+          if [ "$T" = "all" ] || [ "$T" = "rp2040zero" ]; then
+            echo "| **rp2040zero** | \`firmware.uf2\` | Hold BOOT → USB → copy UF2 to RPI-RP2 drive |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "$T" = "all" ] || [ "$T" = "nano" ]; then
+            echo "| **nano** | \`firmware.hex\` | avrdude / Arduino IDE Upload |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Download **Artifacts** at the bottom of this page." >> "$GITHUB_STEP_SUMMARY"

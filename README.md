@@ -49,6 +49,19 @@ This project drives a salvaged Xbox 360 RF module for wireless controller pairin
 - 更换引脚时请同步修改对应 `src/*.cpp` 中的宏定义。
 - RF 命令说明见 `commands.md`；ATTiny 参考实现见根目录 `xboxrf.c`。
 
+## 云端编译固件（GitHub Actions，仅手动）
+
+无需本地 PlatformIO，在 GitHub 上**手动触发**编译：
+
+1. 打开仓库 → **Actions** → **Build Firmware**
+2. 点击 **Run workflow**
+3. 选择编译目标：`all` / `rp2040zero` / `nano` → **Run workflow**
+4. 等待完成后，在页面底部 **Artifacts** 下载：
+   - `xbox360-rf-rp2040zero` → `firmware.uf2`（拖入 RPI-RP2 盘符烧录）
+   - `xbox360-rf-nano` → `firmware.hex`（用 avrdude / IDE 烧录）
+
+> 不会在 push / PR 时自动编译，仅支持手动 Run workflow。
+
 ## 固件编译与上传 / Build & Upload
 
 ### 1. 安装 PlatformIO

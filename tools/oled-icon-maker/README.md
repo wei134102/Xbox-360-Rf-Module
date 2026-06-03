@@ -22,6 +22,14 @@ pip install -r requirements.txt
 python oled_icon_maker.py
 ```
 
+### 启动报错 `Can't find a usable init.tcl`
+
+多因系统里 **`TCL_LIBRARY` 被其它软件改坏**（例如 CSR BlueSuite 指向 `Program Files (x86)\CSR\...`）。
+
+- 优先用 **`run.bat`** 启动（会自动指向当前 Python 自带的 Tcl）。
+- 直接运行 `oled_icon_maker.py` 时，脚本也会在加载 tkinter 前尝试修正路径。
+- 仍失败：到「系统环境变量」里删除用户/系统级的 `TCL_LIBRARY`、`TK_LIBRARY`，或重装 [python.org](https://www.python.org/downloads/) 并勾选 **tcl/tk and IDLE**。
+
 ## 使用步骤
 
 1. 设置目标宽高（例如右侧图标 `32×56`）。

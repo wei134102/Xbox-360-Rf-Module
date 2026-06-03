@@ -1,19 +1,15 @@
 @echo off
 cd /d "%~dp0"
 
-REM 修复部分 Windows 环境找不到 Tcl/Tk 的问题
-for /f "delims=" %%P in ('where python 2^>nul') do set "PYEXE=%%P"
-if not defined PYEXE (
-  echo 未找到 python，请先安装 Python 3.8+
-  pause
-  exit /b 1
-)
-for %%D in ("%PYEXE%") do set "PYROOT=%%~dpD"
-if exist "%PYROOT%tcl\tcl8.6" (
-  set "TCL_LIBRARY=%PYROOT%tcl\tcl8.6"
-  set "TK_LIBRARY=%PYROOT%tcl\tk8.6"
+REM 用当前 python 的 base_prefix 设置 Tcl/Tk（覆盖 CSR BlueSuite 等错误环境变量）
+for /f "delims=" %%I in ('python -c "import sys; print(sys.base_prefix)" 2^>nul') do set "PYROOT=%%I"
+if defined PYROOT (
+  if exist "%PYROOT%\tcl\tcl8.6\init.tcl" (
+    set "TCL_LIBRARY=%PYROOT%\tcl\tcl8.6"
+    set "TK_LIBRARY=%PYROOT%\tcl\tk8.6"
+  )
 )
 
 python -c "import PIL" 2>nul || pip install -r requirements.txt
-python oled_icon_maker.py
-pause
+python "%~dp0oled_icon_maker.py"
+if errorlevel 1 pause

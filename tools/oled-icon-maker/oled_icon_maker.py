@@ -6,11 +6,56 @@ OLED Icon Maker — 从图片或手工像素生成 U8g2 drawXBMP 用的 C 头文
 
 from __future__ import annotations
 
+import os
 import re
-import tkinter as tk
-from tkinter import filedialog, messagebox, ttk
+import sys
 from pathlib import Path
 from typing import List, Optional, Tuple
+
+
+def _bootstrap_tcl_tk() -> bool:
+    """
+    在 import tkinter 之前设置 TCL_LIBRARY / TK_LIBRARY。
+    常见故障：CSR BlueSuite 等软件把 TCL_LIBRARY 指到错误目录。
+    """
+    bases: list[str] = []
+    for attr in ("base_prefix", "prefix"):
+        p = getattr(sys, attr, None)
+        if p and p not in bases:
+            bases.append(p)
+
+    exe = os.path.abspath(sys.executable)
+    bases.append(os.path.dirname(exe))
+    bases.append(os.path.dirname(os.path.dirname(exe)))  # .../Python313
+
+    seen: set[str] = set()
+    for base in bases:
+        base = os.path.normpath(base)
+        if base in seen:
+            continue
+        seen.add(base)
+        tcl = os.path.join(base, "tcl", "tcl8.6")
+        tk = os.path.join(base, "tcl", "tk8.6")
+        init_tcl = os.path.join(tcl, "init.tcl")
+        if os.path.isfile(init_tcl):
+            os.environ["TCL_LIBRARY"] = tcl
+            if os.path.isdir(tk):
+                os.environ["TK_LIBRARY"] = tk
+            return True
+    return False
+
+
+if not _bootstrap_tcl_tk():
+    print(
+        "错误: 未找到 Tcl/Tk（init.tcl）。\n"
+        "请用 python.org 安装包重装 Python，并勾选 tcl/tk。\n"
+        f"当前 Python: {sys.executable}",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
+import tkinter as tk
+from tkinter import filedialog, messagebox, ttk
 
 try:
     from PIL import Image, ImageOps

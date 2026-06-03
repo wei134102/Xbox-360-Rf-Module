@@ -36,7 +36,9 @@ python oled_icon_maker.py
 2. **从图片导入**：选择图片，调整阈值/抖动/反色后点「应用到像素网格」。
 3. 在网格上点击可切换单个像素（黑=点亮 OLED 像素）。
 4. 填写变量名（如 `xbox360_icon`），点 **导出 C 头文件**。
-5. 将生成的 `.h` 复制到 `include/`，在 `pico_zero.cpp` 中 `#include` 并用 `u8g2.drawXBMP(x, y, w, h, 数组名)` 绘制。
+5. 将生成的 `.h` 复制到 `include/`（覆盖 `xbox360_icon.h` 即可，`pico_zero.cpp` 已按该格式引用）。
+
+导出头文件包含：`XXX_W` / `XXX_H`（宽高）、`XXX_X` / `XXX_Y`（128×64 屏右侧坐标）、`XXX_INCLUDE_H`（头文件保护，勿与高度宏同名）。
 
 ## 导出格式
 
